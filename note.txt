@@ -1,0 +1,7 @@
+2018.5.17:
+加上串口OK
+用printf()时要（在Target Option中的Target选项中，将Use microLIB勾上），不然工作不了。
+
+2018.5.18:
+   加上了按键OK，用了位段，之前的没有，
+   明天开始移植freeRTOS

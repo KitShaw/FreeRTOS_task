@@ -1,0 +1,15 @@
+
+/*
+ * led.h
+ */
+ 
+#ifndef __LED_H
+#define __LED_H
+
+#define PCout(n) BIT_ADDR(GPIOA_ODR_Addr,n)
+
+void key_init(void);
+void key_task(void);
+void key_scan(void);
+
+#endif
