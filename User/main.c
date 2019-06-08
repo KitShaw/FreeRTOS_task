@@ -23,6 +23,7 @@ TaskHandle_t INTERRUPTTask_Handler;     //任务句柄
 void interrupt_task(void *p_arg);       //任务函数
 
 void TIM3_Int_Init(u16 arr, u16 pac);
+void TIM4_Int_Init(u16 arr, u16 pac);
 void TIM5_Int_Init(u16 arr, u16 pac);
 
 
@@ -35,6 +36,7 @@ int main(void)
     delay_init(); 
     led_init();
 	TIM3_Int_Init(1000-1, 7200-1);              //初始化定时器3， 定时器周期1S
+	TIM4_Int_Init(1000-1, 7200-1);              //初始化定时器5， 定时器周期1S
 	TIM5_Int_Init(1000-1, 7200-1);              //初始化定时器5， 定时器周期1S
 	xTaskCreate((TaskFunction_t )start_task,    //任务函数
 							 (const char*   )"start_task",  //任务名称
@@ -112,11 +114,39 @@ void TIM3_Int_Init(u16 arr, u16 psc)
 }
 
 
+//通用定时器4中断初始化
+//这里时钟选择为APB1的2倍， 而APB1位36M
+//arr; 自动重装
+//psc: 时钟预分频数
+//这里使用的是定时器4
+void TIM4_Int_Init(u16 arr, u16 psc)
+{
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE); //时钟使能
+	TIM_TimeBaseStructure.TIM_Period = arr; //自动重装载值
+	TIM_TimeBaseStructure.TIM_Prescaler = psc;
+	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
+	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+	
+	NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 4;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+	
+	TIM_Cmd(TIM4, ENABLE);
+}
+
+
 //通用定时器3中断初始化
 //这里时钟选择为APB1的2倍， 而APB1位36M
 //arr; 自动重装
 //psc: 时钟预分频数
-//这里使用的是定时器3
+//这里使用的是定时器5
 void TIM5_Int_Init(u16 arr, u16 psc)
 {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
@@ -149,11 +179,20 @@ void TIM3_IRQHandler(void)
 	}
 }
 
+void TIM4_IRQHandler(void)
+{
+	if(TIM_GetITStatus(TIM4, TIM_IT_Update)==SET)
+	{
+		printf("TIM4输出......\r\n");
+		TIM_ClearITPendingBit(TIM4, TIM_IT_Update); 
+	}
+}
+
 void TIM5_IRQHandler(void)
 {
 	if(TIM_GetITStatus(TIM5, TIM_IT_Update) == SET)
 	{
-		printf("TIM5 输出......\r\n");
+		printf("TIM5输出......\r\n");
 	}
 	TIM_ClearITPendingBit(TIM5,TIM_IT_Update);
 		
