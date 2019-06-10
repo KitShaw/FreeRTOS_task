@@ -46,6 +46,14 @@ int fputc(int ch, FILE *f)
     USART_SendData(USART1,(uint8_t)ch);   
 	return ch;
 }
+
+//重定向fgetc函数
+int fgetc(FILE *f)
+{
+	//等待串口输入数据
+	while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
+	return (int)USART_ReceiveData(USART1);
+}
 #endif 
  
 #if EN_USART1_RX   					//如果使能了接收
